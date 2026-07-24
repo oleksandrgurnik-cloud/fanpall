@@ -7,8 +7,15 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
+  const connectionString = process.env.DATABASE_URL;
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
+    // Hosted Postgres (Neon/Supabase/Vercel) requires TLS
+    ssl:
+      connectionString?.includes("localhost") ||
+      connectionString?.includes("127.0.0.1")
+        ? undefined
+        : { rejectUnauthorized: false },
   });
   const adapter = new PrismaPg(pool);
   return new PrismaClient({

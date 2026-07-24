@@ -6,7 +6,6 @@ import { useSession, signOut } from "next-auth/react";
 import {
   Gamepad2,
   LayoutDashboard,
-  MessageSquare,
   Moon,
   Sun,
   LogOut,

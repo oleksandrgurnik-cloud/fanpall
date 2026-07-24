@@ -8,6 +8,9 @@ import { Footer } from "@/components/layout/footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
+// Avoid build-time DB access on Vercel; marketplace data is always fresh
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: {
     default: "FunPall — Gaming Marketplace",

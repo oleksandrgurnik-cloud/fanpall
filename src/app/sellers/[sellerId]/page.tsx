@@ -6,7 +6,6 @@ import { SellerCard } from "@/components/marketplace/seller-card";
 import { RatingStars } from "@/components/marketplace/rating-stars";
 import { PriceTag } from "@/components/marketplace/price-tag";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 
 interface Props {
