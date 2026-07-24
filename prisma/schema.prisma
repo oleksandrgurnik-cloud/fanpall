@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ListingStatus {
+  ACTIVE
+  INACTIVE
+  SOLD_OUT
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  DELIVERED
+  COMPLETED
+  DISPUTED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String?
+  avatar       String?
+  rating       Float    @default(0)
+  reviewCount  Int      @default(0)
+  balance      Float    @default(0)
+  isVerified   Boolean  @default(false)
+  isOnline     Boolean  @default(false)
+  responseTime String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  listings              Listing[]
+  ordersAsBuyer         Order[]                     @relation("BuyerOrders")
+  ordersAsSeller        Order[]                     @relation("SellerOrders")
+  reviewsWritten        Review[]                    @relation("ReviewsWritten")
+  reviewsReceived       Review[]                    @relation("ReviewsReceived")
+  conversationParticipants ConversationParticipant[]
+  messages              Message[]
+  accounts              Account[]
+  sessions              Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Game {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  imageUrl  String
+  createdAt DateTime @default(now())
+
+  categories Category[]
+  listings   Listing[]
+}
+
+model Category {
+  id     String @id @default(cuid())
+  gameId String
+  name   String
+  slug   String
+
+  game     Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  listings Listing[]
+
+  @@unique([gameId, slug])
+}
+
+model Listing {
+  id          String        @id @default(cuid())
+  sellerId    String
+  gameId      String
+  categoryId  String
+  title       String
+  description String        @db.Text
+  price       Float
+  quantity    Int           @default(1)
+  status      ListingStatus @default(ACTIVE)
+  images      String[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  seller   User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  game     Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orders   Order[]
+}
+
+model Order {
+  id         String      @id @default(cuid())
+  buyerId    String
+  sellerId   String
+  listingId  String
+  quantity   Int
+  totalPrice Float
+  status     OrderStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  buyer   User    @relation("BuyerOrders", fields: [buyerId], references: [id])
+  seller  User    @relation("SellerOrders", fields: [sellerId], references: [id])
+  listing Listing @relation(fields: [listingId], references: [id])
+  review  Review?
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  authorId  String
+  targetId  String
+  rating    Int
+  comment   String   @db.Text
+  createdAt DateTime @default(now())
+
+  order  Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  author User  @relation("ReviewsWritten", fields: [authorId], references: [id])
+  target User  @relation("ReviewsReceived", fields: [targetId], references: [id])
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  id             String @id @default(cuid())
+  conversationId String
+  userId         String
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String   @db.Text
+  createdAt      DateTime @default(now())
+  read           Boolean  @default(false)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
