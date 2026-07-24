@@ -1,4 +1,4 @@
-# FunPall — Gaming Items Marketplace g
+# FunPall — Gaming Items Marketplace ga
 
 A peer-to-peer marketplace for buying and selling in-game currency, accounts, items, skins, and boosting services. Built with Next.js 14 (App Router), TypeScript, Tailwind CSS, Prisma, and NextAuth.js.
 
